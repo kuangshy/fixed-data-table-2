@@ -12,30 +12,20 @@
 
 import FixedDataTableCellDefault from 'FixedDataTableCellDefault';
 import FixedDataTableColumnReorderHandle from './FixedDataTableColumnReorderHandle';
-import FixedDataTableHelper from 'FixedDataTableHelper';
-import React from 'React';
-import createReactClass from 'create-react-class';
+import React from 'react';
 import PropTypes from 'prop-types';
 import cx from 'cx';
 import joinClasses from 'joinClasses';
 import shallowEqual from 'shallowEqual';
+import { polyfill as lifecycleCompatibilityPolyfill } from 'react-lifecycles-compat';
 
-var DIR_SIGN = FixedDataTableHelper.DIR_SIGN;
-
-var DEFAULT_PROPS = {
-  align: 'left',
-  highlighted: false,
-};
-
-var FixedDataTableCell = createReactClass({
-  displayName: 'FixedDataTableCell',
-
+class FixedDataTableCell extends React.Component {
   /**
    * PropTypes are disabled in this component, because having them on slows
    * down the FixedDataTable hugely in DEV mode. You can enable them back for
    * development, but please don't commit this component with enabled propTypes.
    */
-  propTypes_DISABLED_FOR_PERFORMANCE: {
+  static propTypes_DISABLED_FOR_PERFORMANCE = {
     isScrolling: PropTypes.bool,
     align: PropTypes.oneOf(['left', 'center', 'right']),
     className: PropTypes.string,
@@ -89,16 +79,24 @@ var FixedDataTableCell = createReactClass({
     /**
      * Whether touch is enabled or not.
      */
-    touchEnabled: PropTypes.bool
-  },
+    touchEnabled: PropTypes.bool,
 
-  getInitialState() {
-    return {
-      isReorderingThisColumn: false,
-      displacement: 0,
-      reorderingDisplacement: 0
-    };
-  },
+    /**
+     * Whether the cell group is part of the header or footer
+     */
+    isHeaderOrFooter: PropTypes.bool,
+
+    /**
+     * If the component should render for RTL direction
+     */
+    isRTL: PropTypes.bool,
+  }
+
+  state = {
+    isReorderingThisColumn: false,
+    displacement: 0,
+    reorderingDisplacement: 0
+  }
 
   shouldComponentUpdate(nextProps) {
     if (nextProps.isScrolling && this.props.rowIndex === nextProps.rowIndex) {
@@ -126,102 +124,103 @@ var FixedDataTableCell = createReactClass({
     }
 
     return false;
-  },
+  }
 
-  componentWillReceiveProps(props) {
-    var left = props.left + this.state.displacement;
+  static getDerivedStateFromProps(nextProps, prevState) {
+    var left = nextProps.left + prevState.displacement;
 
     var newState = {
-      isReorderingThisColumn: false
+      isReorderingThisColumn: false,
     };
 
-    if (props.isColumnReordering) {
-      var originalLeft = props.columnReorderingData.originalLeft;
-      var reorderCellLeft = originalLeft + props.columnReorderingData.dragDistance;
-      var farthestPossiblePoint = props.columnGroupWidth - props.columnReorderingData.columnWidth;
-
-      // ensure the cell isn't being dragged out of the column group
-      reorderCellLeft = Math.max(reorderCellLeft, 0);
-      reorderCellLeft = Math.min(reorderCellLeft, farthestPossiblePoint);
-
-      if (props.columnKey === props.columnReorderingData.columnKey) {
-        newState.displacement = reorderCellLeft - props.left;
-        newState.isReorderingThisColumn = true;
-
-      } else {
-        var reorderCellRight = reorderCellLeft + props.columnReorderingData.columnWidth;
-        var reorderCellCenter = reorderCellLeft + (props.columnReorderingData.columnWidth / 2);
-        var centerOfThisColumn = left + (props.width / 2);
-
-        var cellIsBeforeOneBeingDragged = reorderCellCenter > centerOfThisColumn;
-        var cellWasOriginallyBeforeOneBeingDragged = originalLeft > props.left;
-        var changedPosition = false;
-
-
-        var dragPoint, thisCellPoint;
-        if (cellIsBeforeOneBeingDragged) {
-          if (reorderCellLeft < centerOfThisColumn) {
-            changedPosition = true;
-            if (cellWasOriginallyBeforeOneBeingDragged) {
-              newState.displacement = props.columnReorderingData.columnWidth;
-            } else {
-              newState.displacement = 0;
-            }
-          }
-        } else {
-          if (reorderCellRight > centerOfThisColumn) {
-            changedPosition = true;
-            if (cellWasOriginallyBeforeOneBeingDragged) {
-              newState.displacement = 0;
-            } else {
-              newState.displacement = props.columnReorderingData.columnWidth * -1;
-            }
-          }
-        }
-
-        if (changedPosition) {
-          if (cellIsBeforeOneBeingDragged) {
-            if (!props.columnReorderingData.columnAfter) {
-              props.columnReorderingData.columnAfter = props.columnKey;
-            }
-          } else {
-            props.columnReorderingData.columnBefore = props.columnKey;
-          }
-        } else if (cellIsBeforeOneBeingDragged) {
-          props.columnReorderingData.columnBefore = props.columnKey;
-        } else if (!props.columnReorderingData.columnAfter) {
-          props.columnReorderingData.columnAfter = props.columnKey;
-        }
-
-      }
-    } else {
+    if (!nextProps.isColumnReordering) {
       newState.displacement = 0;
+      return newState;
+    }
+    
+    var originalLeft = nextProps.columnReorderingData.originalLeft;
+    var reorderCellLeft = originalLeft + nextProps.columnReorderingData.dragDistance;
+    var farthestPossiblePoint = nextProps.columnGroupWidth - nextProps.columnReorderingData.columnWidth;
+
+    // ensure the cell isn't being dragged out of the column group
+    reorderCellLeft = Math.max(reorderCellLeft, 0);
+    reorderCellLeft = Math.min(reorderCellLeft, farthestPossiblePoint);
+
+    // check if current cell belongs to the column that's being reordered
+    if (nextProps.columnKey === nextProps.columnReorderingData.columnKey) {
+      newState.displacement = reorderCellLeft - nextProps.left;
+      newState.isReorderingThisColumn = true;
+      return newState;
     }
 
-    this.setState(newState);
-  },
+    var reorderCellRight = reorderCellLeft + nextProps.columnReorderingData.columnWidth;
+    var reorderCellCenter = reorderCellLeft + (nextProps.columnReorderingData.columnWidth / 2);
+    var centerOfThisColumn = left + (nextProps.width / 2);
 
-  getDefaultProps() /*object*/ {
-    return DEFAULT_PROPS;
-  },
+    var cellIsBeforeOneBeingDragged = reorderCellCenter > centerOfThisColumn;
+    var cellWasOriginallyBeforeOneBeingDragged = originalLeft > nextProps.left;
+    var changedPosition = false;
+
+    if (cellIsBeforeOneBeingDragged) {
+      if (reorderCellLeft < centerOfThisColumn) {
+        changedPosition = true;
+        if (cellWasOriginallyBeforeOneBeingDragged) {
+          newState.displacement = nextProps.columnReorderingData.columnWidth;
+        } else {
+          newState.displacement = 0;
+        }
+      }
+    } else {
+      if (reorderCellRight > centerOfThisColumn) {
+        changedPosition = true;
+        if (cellWasOriginallyBeforeOneBeingDragged) {
+          newState.displacement = 0;
+        } else {
+          newState.displacement = nextProps.columnReorderingData.columnWidth * -1;
+        }
+      }
+    }
+
+    if (changedPosition) {
+      if (cellIsBeforeOneBeingDragged) {
+        if (!nextProps.columnReorderingData.columnAfter) {
+          nextProps.columnReorderingData.columnAfter = nextProps.columnKey;
+        }
+      } else {
+        nextProps.columnReorderingData.columnBefore = nextProps.columnKey;
+      }
+    } else if (cellIsBeforeOneBeingDragged) {
+      nextProps.columnReorderingData.columnBefore = nextProps.columnKey;
+    } else if (!nextProps.columnReorderingData.columnAfter) {
+      nextProps.columnReorderingData.columnAfter = nextProps.columnKey;
+    }
+
+    return newState;
+  }
+
+  static defaultProps = /*object*/ {
+    align: 'left',
+    highlighted: false,
+  }
 
   render() /*object*/ {
 
-    var {height, width, columnKey, ...props} = this.props;
+    var { height, width, columnKey, isHeaderOrFooter, ...props } = this.props;
 
     var style = {
       height,
       width,
     };
 
-    if (DIR_SIGN === 1) {
-      style.left = props.left;
-    } else {
+    if (this.props.isRTL) {
       style.right = props.left;
+    } else {
+      style.left = props.left;
     }
 
     if (this.state.isReorderingThisColumn) {
-      style.transform = `translateX(${this.state.displacement}px) translateZ(0)`;
+      const DIR_SIGN = this.props.isRTL ? -1 : 1;
+      style.transform = `translateX(${this.state.displacement * DIR_SIGN}px) translateZ(0)`;
       style.zIndex = 1;
     }
 
@@ -245,18 +244,14 @@ var FixedDataTableCell = createReactClass({
       var columnResizerStyle = {
         height
       };
-      function suppress(event) {
-        event.preventDefault();
-        event.stopPropagation();
-      };
       columnResizerComponent = (
         <div
           className={cx('fixedDataTableCellLayout/columnResizerContainer')}
           style={columnResizerStyle}
           onMouseDown={this._onColumnResizerMouseDown}
           onTouchStart={this.props.touchEnabled ? this._onColumnResizerMouseDown : null}
-          onTouchEnd={this.props.touchEnabled ? suppress : null}
-          onTouchMove={this.props.touchEnabled ? suppress : null}>
+          onTouchEnd={this.props.touchEnabled ? this._suppressEvent : null}
+          onTouchMove={this.props.touchEnabled ? this._suppressEvent : null}>
           <div
             className={joinClasses(
               cx('fixedDataTableCellLayout/columnResizerKnob'),
@@ -306,16 +301,18 @@ var FixedDataTableCell = createReactClass({
       );
     }
 
+    const role = isHeaderOrFooter ? 'columnheader' : 'gridcell';
+
     return (
-      <div className={className} style={style}>
+      <div className={className} style={style} role={role}>
         {columnResizerComponent}
         {columnReorderComponent}
         {content}
       </div>
     );
-  },
+  }
 
-  _onColumnResizerMouseDown(/*object*/ event) {
+  _onColumnResizerMouseDown = (/*object*/ event) => {
     this.props.onColumnResize(
       this.props.left,
       this.props.width,
@@ -332,16 +329,21 @@ var FixedDataTableCell = createReactClass({
       event.preventDefault();
       event.stopPropagation();
     }
-  },
+  }
 
-  _onColumnReorderMouseDown(/*object*/ event) {
+  _onColumnReorderMouseDown = (/*object*/ event) => {
     this.props.onColumnReorder(
       this.props.columnKey,
       this.props.width,
       this.props.left,
       event
     );
-  },
-});
+  }
 
-module.exports = FixedDataTableCell;
+  _suppressEvent = (/*object*/ event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}
+
+export default lifecycleCompatibilityPolyfill(FixedDataTableCell);

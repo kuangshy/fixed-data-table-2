@@ -25,7 +25,6 @@
 }
 
 .ScrollbarLayout/mainHorizontal {
-  bottom: 0;
   height: var(--scrollbar-size);
   left: 0;
   transition-property: background-color height;
@@ -72,6 +71,12 @@
   left: 0;
   top: var(--scrollbar-face-margin);
   width: 100%;
+}
+
+.fixedDataTable_isRTL .ScrollbarLayout/faceHorizontal,
+.fixedDataTable_isRTL .ScrollbarLayout/faceHorizontal:after {
+  right: 0;
+  left: auto;
 }
 
 .ScrollbarLayout/faceHorizontal.public/Scrollbar/faceActive:after,

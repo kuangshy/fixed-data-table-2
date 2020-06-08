@@ -1,5 +1,5 @@
 /**
- * FixedDataTable v0.8.19 
+ * FixedDataTable v1.1.0 
  *
  * Copyright Schrodinger, LLC
  * All rights reserved.
@@ -30,6 +30,11 @@
   white-space: nowrap;
 }
 
+.fixedDataTable_isRTL .fixedDataTableCellGroupLayout_cellGroup {
+  right: 0;
+  left: auto;
+}
+
 .fixedDataTableCellGroupLayout_cellGroup > .public_fixedDataTableCell_main {
   display: inline-block;
   vertical-align: top;
@@ -55,12 +60,17 @@
   border-right-style: solid;
   border-right-width: 1px;
   border-width: 0 1px 0 0;
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
+  box-sizing: border-box;
   display: block;
   overflow: hidden;
   position: absolute;
   white-space: normal;
+}
+
+.fixedDataTable_isRTL .fixedDataTableCellLayout_main {
+  border-right-width: 0;
+  border-left-style: solid;
+  border-left-width: 1px;
 }
 
 .fixedDataTableCellLayout_lastChild {
@@ -95,6 +105,11 @@
   z-index: 1;
 }
 
+.fixedDataTable_isRTL .fixedDataTableCellLayout_columnResizerContainer {
+  left: 0px;
+  right: auto;
+}
+
 .fixedDataTableCellLayout_columnResizerContainer:hover {
   cursor: ew-resize;
 }
@@ -108,6 +123,11 @@
   right: 0px;
   visibility: hidden;
   width: 4px;
+}
+
+.fixedDataTable_isRTL .fixedDataTableCellLayout_columnResizerKnob {
+  left: 0px;
+  right: auto;
 }
 /**
  * Copyright Schrodinger, LLC
@@ -127,22 +147,24 @@
   width: 12px;
 }
 
+.fixedDataTable_isRTL .fixedDataTableColumnResizerLineLayout_mouseArea  {
+  right: auto;
+  left: -5px;
+}
+
 .fixedDataTableColumnResizerLineLayout_main {
   border-right-style: solid;
   border-right-width: 1px;
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
+  box-sizing: border-box;
   position: absolute;
   z-index: 10;
   pointer-events: none;
 }
 
-body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
-  /* the resizer line is in the wrong position in RTL with no easy fix.
-   * Disabling is more useful than displaying it.
-   * #167 (github) should look into this and come up with a permanent fix.
-   */
-  display: none !important;
+.fixedDataTable_isRTL .fixedDataTableColumnResizerLineLayout_main {
+  border-right-width: 0;
+  border-left-style: solid;
+  border-left-width: 1px;
 }
 
 .fixedDataTableColumnResizerLineLayout_hiddenElem {
@@ -162,8 +184,7 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
 .fixedDataTableLayout_main {
   border-style: solid;
   border-width: 1px;
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
+  box-sizing: border-box;
   overflow: hidden;
   position: relative;
 }
@@ -196,11 +217,6 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
   overflow: hidden;
   position: relative;
 }
-
-.fixedDataTableLayout_horizontalScrollbar {
-  bottom: 0;
-  position: absolute;
-}
 /**
  * Copyright Schrodinger, LLC
  * All rights reserved.
@@ -213,8 +229,7 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
  */
 
 .fixedDataTableRowLayout_main {
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
+  box-sizing: border-box;
   overflow: hidden;
   position: absolute;
   top: 0;
@@ -222,13 +237,13 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
 
 .fixedDataTableRowLayout_body {
   left: 0;
+  right: 0;
   position: absolute;
   top: 0;
 }
 
 .fixedDataTableRowLayout_rowExpanded {
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
+  box-sizing: border-box;
   left: 0;
   position: absolute;
 }
@@ -244,6 +259,12 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
   width: 0;
 }
 
+.fixedDataTable_isRTL .fixedDataTableRowLayout_fixedColumnsDivider {
+  border-left-width: 0;
+  border-right-style: solid;
+  border-right-width: 1px;
+}
+
 .fixedDataTableRowLayout_columnsShadow {
   position: absolute;
   width: 4px;
@@ -251,6 +272,11 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
 
 .fixedDataTableRowLayout_columnsRightShadow {
   right: 1px;
+}
+
+.fixedDataTable_isRTL .fixedDataTableRowLayout_columnsRightShadow {
+  left: 1px;
+  right: auto;
 }
 
 .fixedDataTableRowLayout_rowWrapper {
@@ -269,8 +295,7 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
  */
 
 .ScrollbarLayout_main {
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
+  box-sizing: border-box;
   outline: none;
   overflow: hidden;
   position: absolute;
@@ -288,10 +313,8 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
 }
 
 .ScrollbarLayout_mainHorizontal {
-  bottom: 0;
   height: 15px;
   left: 0;
-  -webkit-transition-property: background-color height;
   transition-property: background-color height;
 }
 
@@ -306,11 +329,8 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
   overflow: hidden;
   position: absolute;
   z-index: 1;
-  -webkit-transition-duration: 250ms;
-          transition-duration: 250ms;
-  -webkit-transition-timing-function: ease;
-          transition-timing-function: ease;
-  -webkit-transition-property: width;
+  transition-duration: 250ms;
+  transition-timing-function: ease;
   transition-property: width;
 }
 
@@ -325,7 +345,6 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
   content: '';
   display: block;
   position: absolute;
-  -webkit-transition: background-color 250ms ease;
   transition: background-color 250ms ease;
 }
 
@@ -340,6 +359,12 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
   left: 0;
   top: 4px;
   width: 100%;
+}
+
+.fixedDataTable_isRTL .ScrollbarLayout_faceHorizontal,
+.fixedDataTable_isRTL .ScrollbarLayout_faceHorizontal:after {
+  right: 0;
+  left: auto;
 }
 
 .ScrollbarLayout_faceHorizontal.public_Scrollbar_faceActive:after,

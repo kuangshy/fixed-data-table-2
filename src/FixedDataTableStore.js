@@ -6,15 +6,14 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule Locale
+ * @providesModule FixedDataTableStore
  */
 
-"use strict";
+'use strict';
 
-// Hard code this for now.
-var Locale = {
-  isRTL: () => false,
-  getDirection: () => 'LTR'
+import reducers from 'reducers'
+import { createStore } from 'redux'
+
+export default {
+  get: () => createStore(reducers)
 };
-
-module.exports = Locale;
